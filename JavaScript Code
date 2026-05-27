@@ -1,1 +1,347 @@
+const STORAGE_KEY = "habit-tracker-storage";
 
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+  habits: [],
+  completions: {}
+};
+
+let currentWeekOffset = 0;
+
+const app = document.getElementById("app");
+const weekLabel = document.getElementById("weekLabel");
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getStartOfWeek(date){
+
+  const d = new Date(date);
+
+  // Sunday start
+  const day = d.getDay();
+
+  d.setDate(d.getDate() - day);
+
+  d.setHours(0,0,0,0);
+
+  return d;
+}
+
+function formatDate(date){
+  return date.toISOString().split("T")[0];
+}
+
+function getWeekDates(offset = 0){
+
+  const today = new Date();
+
+  const start = getStartOfWeek(today);
+
+  start.setDate(start.getDate() + offset * 7);
+
+  const days = [];
+
+  for(let i = 0; i < 7; i++){
+
+    const day = new Date(start);
+
+    day.setDate(start.getDate() + i);
+
+    days.push(day);
+  }
+
+  return days;
+}
+
+function calculateStreak(habitId){
+
+  const dates = state.completions[habitId] || [];
+
+  if(dates.length === 0){
+    return 0;
+  }
+
+  let streak = 0;
+
+  const current = new Date();
+
+  current.setHours(0,0,0,0);
+
+  while(true){
+
+    const key = formatDate(current);
+
+    if(dates.includes(key)){
+
+      streak++;
+
+      current.setDate(current.getDate() - 1);
+
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+function toggleCheck(habitId, date){
+
+  if(!state.completions[habitId]){
+    state.completions[habitId] = [];
+  }
+
+  const arr = state.completions[habitId];
+
+  if(arr.includes(date)){
+
+    state.completions[habitId] =
+      arr.filter(d => d !== date);
+
+  } else {
+
+    arr.push(date);
+  }
+
+  saveState();
+
+  render();
+}
+
+function addHabit(name){
+
+  state.habits.push({
+    id: crypto.randomUUID(),
+    name
+  });
+
+  saveState();
+
+  render();
+}
+
+function deleteHabit(id){
+
+  if(!confirm("Delete this habit?")){
+    return;
+  }
+
+  state.habits =
+    state.habits.filter(h => h.id !== id);
+
+  delete state.completions[id];
+
+  saveState();
+
+  render();
+}
+
+function renameHabit(id){
+
+  const habit =
+    state.habits.find(h => h.id === id);
+
+  const newName = prompt(
+    "Rename habit:",
+    habit.name
+  );
+
+  if(!newName || !newName.trim()){
+    return;
+  }
+
+  habit.name = newName.trim();
+
+  saveState();
+
+  render();
+}
+
+function render(){
+
+  const weekDates =
+    getWeekDates(currentWeekOffset);
+
+  const todayStr =
+    formatDate(new Date());
+
+  weekLabel.textContent =
+    `${weekDates[0].toLocaleDateString(undefined, {
+      month:"short",
+      day:"numeric"
+    })} - ${weekDates[6].toLocaleDateString(undefined, {
+      month:"short",
+      day:"numeric"
+    })}`;
+
+  if(state.habits.length === 0){
+
+    app.innerHTML = `
+      <div class="empty-state">
+        <h2>No habits yet</h2>
+        <p>
+          Add your first habit above and begin building
+          a strong daily routine.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  let html = `
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Habit</th>
+  `;
+
+  weekDates.forEach(date => {
+
+    const isToday =
+      formatDate(date) === todayStr;
+
+    html += `
+      <th class="${isToday ? "today" : ""}">
+        ${date.toLocaleDateString(undefined, {
+          weekday:"short"
+        })}
+        <br>
+        ${date.getDate()}
+      </th>
+    `;
+  });
+
+  html += `
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  state.habits.forEach(habit => {
+
+    html += `
+      <tr>
+
+        <td class="habit-cell">
+
+          <div class="habit-top">
+
+            <div class="habit-name">
+              ${habit.name}
+            </div>
+
+            <div class="habit-actions">
+
+              <button
+                class="icon-btn"
+                onclick="renameHabit('${habit.id}')"
+              >
+                ✏️
+              </button>
+
+              <button
+                class="icon-btn delete-btn"
+                onclick="deleteHabit('${habit.id}')"
+              >
+                🗑
+              </button>
+
+            </div>
+
+          </div>
+
+          <div class="streak">
+            🔥 ${calculateStreak(habit.id)} day streak
+          </div>
+
+        </td>
+    `;
+
+    weekDates.forEach(date => {
+
+      const dateKey = formatDate(date);
+
+      const checked =
+        state.completions[habit.id]?.includes(dateKey);
+
+      const isToday =
+        dateKey === todayStr;
+
+      html += `
+        <td class="${isToday ? "today" : ""}">
+
+          <button
+            class="check-btn ${checked ? "checked" : ""}"
+            onclick="toggleCheck('${habit.id}', '${dateKey}')"
+          >
+            ${checked ? "✓" : ""}
+          </button>
+
+        </td>
+      `;
+    });
+
+    html += `</tr>`;
+  });
+
+  html += `
+      </tbody>
+    </table>
+    </div>
+  `;
+
+  app.innerHTML = html;
+}
+
+document
+  .getElementById("habitForm")
+  .addEventListener("submit", function(e){
+
+    e.preventDefault();
+
+    const input =
+      document.getElementById("habitInput");
+
+    const value =
+      input.value.trim();
+
+    if(!value){
+      return;
+    }
+
+    addHabit(value);
+
+    input.value = "";
+  });
+
+document
+  .getElementById("prevWeek")
+  .addEventListener("click", function(){
+
+    currentWeekOffset--;
+
+    render();
+  });
+
+document
+  .getElementById("nextWeek")
+  .addEventListener("click", function(){
+
+    currentWeekOffset++;
+
+    render();
+  });
+
+document
+  .getElementById("todayWeek")
+  .addEventListener("click", function(){
+
+    currentWeekOffset = 0;
+
+    render();
+  });
+
+render();
