@@ -1,1 +1,56 @@
+# ANSWERS.md
 
+## 1. How to run
+
+I built this project using plain HTML, CSS, and JavaScript, so there are no package installations or build tools required. To run the project on a fresh machine, I only need to download the
+files and open the `index.html` file in a browser. I also tested the project in CodePen by placing the HTML, CSS, and JavaScript into their 
+separate sections. Since the app uses localStorage, all habits and streaks persist automatically after page reloads without requiring a backend or database.
+
+If I wanted to deploy it publicly, I could easily host it on GitHub Pages, Netlify, or Vercel because it is a fully static frontend project.
+
+---
+
+## 2. Stack & design choices
+
+I chose plain HTML, CSS, and JavaScript because the project requirements focused heavily on interaction design, responsiveness, and usability rather than framework complexity.
+Using vanilla JavaScript allowed me to keep the app lightweight, easy to understand, and fast to load without introducing unnecessary dependencies.
+
+One visual decision I made was using a table-style weekly grid instead of stacked cards or a vertical checklist. I did this because habit tracking is
+easier to understand when users can visually scan both habits and days at the same time. The horizontal week layout helps users immediately notice patterns, gaps, and streaks.
+
+Another interaction decision I made was highlighting today’s column with a softer background color. I wanted the current day to stand out immediately 
+without overwhelming the interface. Since users interact with today’s checkboxes most frequently, the highlight improves orientation and reduces the mental effort required to find the current date.
+
+---
+
+## 3. Responsive & accessibility
+
+On a 360px-wide phone, the app becomes horizontally scrollable so the weekly grid remains readable instead of compressing the columns too tightly. Buttons become 
+slightly smaller, spacing is reduced, and the layout stacks vertically where necessary. On a 1440px laptop, the interface expands naturally with more whitespace, making the grid easier to scan across large screens.
+
+One accessibility consideration I handled was focus visibility. Inputs and buttons include visible focus and hover states so keyboard users can clearly see where they are navigating.
+I also maintained strong color contrast between text, buttons, and backgrounds to improve readability.
+
+One accessibility improvement I knowingly skipped was adding ARIA labels for every interactive button and checkbox. Since I prioritized completing the core functionality
+and visual polish within the time available, I focused first on usability and persistence. With more time, I would improve screen reader support and semantic accessibility further.
+
+---
+
+## 4. AI usage
+
+I used ChatGPT to help brainstorm the overall structure of the habit tracker, generate an initial version of the HTML/CSS/JavaScript code, and refine some of the responsive styling decisions. I 
+also used it to help organize the weekly grid layout and localStorage persistence logic.
+
+One important change I made to the AI-generated output was redesigning the layout responsiveness. The initial version used rigid widths that looked cramped on smaller screens. I modified the 
+structure to allow horizontal scrolling for the table and adjusted spacing, button sizing, and wrapping behavior so the interface remained usable on narrow mobile screens while still looking clean on larger displays.
+
+I also simplified parts of the JavaScript logic and renamed variables to make the code easier to read and maintain.
+
+---
+
+## 5. Honest gap
+
+One area that is not polished enough is the editing interaction for habits. Right now, renaming habits uses the browser’s default `prompt()` dialog, which works functionally but does not match the visual quality of the rest of the application.
+
+With another day, I would replace the browser prompts with a custom modal component that matches the app’s design system. I would also add smoother animations, keyboard shortcuts, and optional analytics like weekly completion percentages or 
+habit heatmaps to make the tracker feel more complete and engaging.
